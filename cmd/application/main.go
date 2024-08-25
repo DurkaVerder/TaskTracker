@@ -12,9 +12,9 @@ func main() {
 	// Init database
 	db, err := db.InitDb()
 	if err != nil {
-		log.Println("Error init database: ", err)
-		return
+		log.Fatal("Error init database: ", err)
 	}
+	defer db.Close()
 
 	// Init server
 	e := echo.New()
