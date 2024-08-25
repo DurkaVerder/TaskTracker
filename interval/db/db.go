@@ -6,7 +6,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 //
 //	connect := "user=postgres password=durka dbname=taskTracker host=host.docker.internal port=5432"
 //
