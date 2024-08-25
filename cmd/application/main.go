@@ -2,7 +2,10 @@ package main
 
 import (
 	"TaskTracker/interval/db"
+	"TaskTracker/interval/handler"
 	"log"
+
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
@@ -14,6 +17,9 @@ func main() {
 	}
 
 	// Init server
+	e := echo.New()
 
 	// Run server
+
+	handler.Run(e, db)
 }
