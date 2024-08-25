@@ -12,7 +12,7 @@ import (
 //
 
 func InitDb() (*sql.DB, error) {
-	connect := "user=postgres password=durka dbname=taskTracker port=5432"
+	connect := "user=postgres password=durka dbname=TaskTracker port=5432 sslmode=disable"
 	db, err := sql.Open("postgres", connect)
 	if err != nil {
 		return nil, err
