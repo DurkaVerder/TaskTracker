@@ -1,0 +1,44 @@
+{{ define "content" }}
+<h2>{{.Title}}</h2>
+
+{{if .Tasks}}
+<ul>
+    {{range .Tasks}}
+    <li>
+        <strong>ID:</strong> {{.Id}}<br>
+        <strong>Description:</strong> {{.Description}}<br>
+        <strong>Status:</strong> {{.Status}}<br>
+        <strong>Created At:</strong> {{.CreatedAt.Format "02 Jan 2006 15:04:05"}}<br>
+        <strong>Updated At:</strong> {{.UpdateAt.Format "02 Jan 2006 15:04:05"}}<br>
+        
+        <!-- Форма для изменения описания -->
+        <form action="/tasks/updateDescription/{{.Id}}" method="post">
+            <label for="description">New Description:</label>
+            <input type="text" name="description" id="description" value="{{.Description}}" required>
+            <button type="submit">Update Description</button>
+        </form>
+
+        <!-- Форма для изменения статуса -->
+        <form action="/tasks/updateStatus/{{.Id}}" method="post">
+            <label for="status">New Status:</label>
+            <select name="status" id="status">
+                <option value="todo" {{if eq .Status "todo" }} selected{{end}}>todo</option>
+                <option value="in-progress" {{if eq .Status "in-progress" }} selected{{end}}>in-progress</option>
+                <option value="done" {{if eq .Status "done" }} selected{{end}}>done</option>
+            </select>
+            <button type="submit">Update Status</button>
+        </form>
+
+        <!-- Форма для удаления задачи -->
+        <form action="/tasks/delete/{{.Id}}" method="post" onsubmit="return confirm('Are you sure you want to delete this task?');">
+            <button type="submit">Delete Task</button>
+        </form>
+
+        <hr>
+    </li>
+    {{end}}
+</ul>
+{{else}}
+<p>No tasks available.</p>
+{{end}}
+{{ end }}

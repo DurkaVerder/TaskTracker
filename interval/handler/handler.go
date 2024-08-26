@@ -2,11 +2,14 @@ package handler
 
 import (
 	"database/sql"
+	"io"
 	"log"
 	"net/http"
+	"text/template"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type Task struct {
@@ -17,7 +20,28 @@ type Task struct {
 	UpdateAt    time.Time `json:"updateAt"`
 }
 
+type PageData struct {
+	Title string `json:"title"`
+	Tasks []Task `json:"tasks"`
+}
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
 func Run(e *echo.Echo, db *sql.DB) {
+
+	t := &Template{
+		templates: template.Must(template.ParseGlob("templates/*.html")),
+	}
+
+	e.Renderer = t
+	e.Static("/static", "static")
+	e.Use(middleware.Logger())
 
 	e.GET("/tasks", func(c echo.Context) error {
 		tasks, err := allTasks(db)
@@ -26,47 +50,46 @@ func Run(e *echo.Echo, db *sql.DB) {
 			return c.String(http.StatusInternalServerError, "Error get tasks")
 		}
 
-		err = c.JSON(http.StatusOK, tasks)
-		if err != nil {
-			log.Println("Error json tasks")
-			return c.String(echo.ErrInternalServerError.Code, "Error get tasks")
+		data := PageData{
+			Title: "TaskTracker",
+			Tasks: tasks,
 		}
 
-		return c.String(http.StatusOK, "")
+		return c.Render(http.StatusOK, "layout.html", data)
 	})
 
-	e.POST("/addTask", func(c echo.Context) error {
+	e.POST("/tasks/add", func(c echo.Context) error {
 		if err := addTask(c, db); err != nil {
 			log.Println("Error add task: ", err)
 			return c.String(http.StatusInternalServerError, "Error add task")
 		}
-		
-		return c.String(http.StatusCreated, "Add task successful")
+
+		return c.Redirect(http.StatusSeeOther, "/tasks")
 	})
 
-	e.PUT("/changeTask/:id", func(c echo.Context) error {
+	e.POST("/tasks/updateDescription/:id", func(c echo.Context) error {
 		if err := updateTask(c, db); err != nil {
 			log.Println("Error update Task: ", err)
 			return c.String(echo.ErrInternalServerError.Code, "Error update task")
 		}
-		return c.String(http.StatusOK, "Change successful")
+		return c.Redirect(http.StatusSeeOther, "/tasks")
 	})
 
-	e.PUT("/changeStatus/:id", func(c echo.Context) error {
+	e.POST("/tasks/updateStatus/:id", func(c echo.Context) error {
 		if err := changeStatus(c, db); err != nil {
 			log.Println("Error change status: ", err)
 			return c.String(echo.ErrInternalServerError.Code, "Error change status")
 		}
-		
-		return c.String(http.StatusOK, "Change successful")
+
+		return c.Redirect(http.StatusSeeOther, "/tasks")
 	})
 
-	e.DELETE("/deleteTask/:id", func(c echo.Context) error {
+	e.POST("/tasks/delete/:id", func(c echo.Context) error {
 		if err := deleteTask(c, db); err != nil {
 			log.Println("Error delete task: ", err)
 			return c.String(echo.ErrInternalServerError.Code, "Error delete task")
 		}
-		return c.String(http.StatusOK, "Delete successful")
+		return c.Redirect(http.StatusSeeOther, "/tasks")
 	})
 
 	e.Start(":2222")
@@ -100,12 +123,11 @@ func allTasks(db *sql.DB) ([]Task, error) {
 
 func addTask(c echo.Context, db *sql.DB) error {
 	req := "INSERT INTO tasks (description, status) VALUES ($1, $2)"
-	task := Task{}
-	if err := c.Bind(&task); err != nil {
-		return err
-	}
 
-	if _, err := db.Exec(req, task.Description, task.Status); err != nil {
+	des := c.FormValue("description")
+	status := c.FormValue("status")
+
+	if _, err := db.Exec(req, des, status); err != nil {
 		return err
 	}
 
@@ -113,14 +135,11 @@ func addTask(c echo.Context, db *sql.DB) error {
 }
 
 func updateTask(c echo.Context, db *sql.DB) error {
-	task := Task{}
 	idTask := c.Param("id")
-	if err := c.Bind(&task); err != nil {
-		return err
-	}
-	
+	newDes := c.FormValue("description")
+
 	req := "UPDATE tasks SET description = $1 WHERE id = $2"
-	if _, err := db.Exec(req, task.Description, idTask); err != nil {
+	if _, err := db.Exec(req, newDes, idTask); err != nil {
 		return err
 	}
 
@@ -128,15 +147,12 @@ func updateTask(c echo.Context, db *sql.DB) error {
 }
 
 func changeStatus(c echo.Context, db *sql.DB) error {
-	task := Task{}
 	idTask := c.Param("id")
+	newStatus := c.FormValue("status")
 	req := "UPDATE tasks SET status = $1 WHERE id = $2"
-	if err := c.Bind(&task); err != nil {
-		return err
-	}
 
-	if _, err := db.Exec(req, task.Status, idTask); err != nil {
-		return nil
+	if _, err := db.Exec(req, newStatus, idTask); err != nil {
+		return err
 	}
 
 	return nil

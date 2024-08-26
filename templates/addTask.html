@@ -1,0 +1,18 @@
+{{ define "addTask" }}
+
+<h2>Add Task</h2>
+
+<form action="/tasks/add" method="post">
+    <label for="description">Description:</label>
+    <input type="text" name="description" id="description" value="" required>
+
+    <label for="status">Status:</label>
+    <select name="status" id="status">
+        <option value="todo">todo</option>
+        <option value="in-progress">in-progress</option>
+        <option value="done">done</option>
+    </select>
+    <button type="submit">Add</button>
+</form>
+
+{{ end }}
