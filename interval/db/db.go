@@ -11,7 +11,7 @@ import (
 //
 
 func InitDb() (*sql.DB, error) {
-	connect := "user=postgres password=durka dbname=TaskTracker port=5432 sslmode=disable"
+	connect := "user=postgres password=durka dbname=taskTracker host=host.docker.internal port=5432"
 	db, err := sql.Open("postgres", connect)
 	if err != nil {
 		return nil, err
