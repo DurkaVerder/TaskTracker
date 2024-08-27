@@ -137,9 +137,9 @@ func addTask(c echo.Context, db *sql.DB) error {
 func updateTask(c echo.Context, db *sql.DB) error {
 	idTask := c.Param("id")
 	newDes := c.FormValue("description")
-
-	req := "UPDATE tasks SET description = $1 WHERE id = $2"
-	if _, err := db.Exec(req, newDes, idTask); err != nil {
+	newTime := time.Now()
+	req := "UPDATE tasks SET description = $1, updateAt = $2 WHERE id = $3"
+	if _, err := db.Exec(req, newDes, newTime, idTask); err != nil {
 		return err
 	}
 

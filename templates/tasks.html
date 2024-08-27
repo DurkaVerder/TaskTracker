@@ -11,15 +11,17 @@
         <strong>Created At:</strong> {{.CreatedAt.Format "02 Jan 2006 15:04:05"}}<br>
         <strong>Updated At:</strong> {{.UpdateAt.Format "02 Jan 2006 15:04:05"}}<br>
         
-        <!-- Форма для изменения описания -->
-        <form action="/tasks/updateDescription/{{.Id}}" method="post">
+        
+        <button onclick="toggleVisibility('desc-form-{{.Id}}')">Edit Description</button>
+        <form id="desc-form-{{.Id}}" action="/tasks/updateDescription/{{.Id}}" method="post" style="display:none;">
             <label for="description">New Description:</label>
             <input type="text" name="description" id="description" value="{{.Description}}" required>
             <button type="submit">Update Description</button>
         </form>
 
-        <!-- Форма для изменения статуса -->
-        <form action="/tasks/updateStatus/{{.Id}}" method="post">
+       
+        <button onclick="toggleVisibility('status-form-{{.Id}}')">Edit Status</button>
+        <form id="status-form-{{.Id}}" action="/tasks/updateStatus/{{.Id}}" method="post" style="display:none;">
             <label for="status">New Status:</label>
             <select name="status" id="status">
                 <option value="todo" {{if eq .Status "todo" }} selected{{end}}>todo</option>
@@ -29,8 +31,8 @@
             <button type="submit">Update Status</button>
         </form>
 
-        <!-- Форма для удаления задачи -->
-        <form action="/tasks/delete/{{.Id}}" method="post" onsubmit="return confirm('Are you sure you want to delete this task?');">
+        
+        <form id="delete-form-{{.Id}}" action="/tasks/delete/{{.Id}}" method="post" style="display:flexbox;" onsubmit="return confirm('Are you sure you want to delete this task?');">
             <button type="submit">Delete Task</button>
         </form>
 
@@ -41,4 +43,16 @@
 {{else}}
 <p>No tasks available.</p>
 {{end}}
+
+
+<script>
+function toggleVisibility(formId) {
+    var form = document.getElementById(formId);
+    if (form.style.display === "none") {
+        form.style.display = "block";
+    } else {
+        form.style.display = "none";
+    }
+}
+</script>
 {{ end }}
